@@ -1,4 +1,6 @@
-from unittest import TestCase
+#!/usr/bin/env python
+
+import unittest
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
@@ -9,11 +11,12 @@ USERNAME = "test.test100500"
 PASSWORD = "Passwo1!"
 
 
-class TestSendMessage(TestCase):
+class TestSendMessage(unittest.TestCase):
     def setUp(self):
         self.driver = webdriver.Remote(
             command_executor='http://192.168.99.100:32769/wd/hub',
             desired_capabilities=DesiredCapabilities.FIREFOX)
+        self.driver.implicitly_wait(10)
 
         self.yandex_mail = YandexMailWrapper(self.driver)
         self.yandex_mail.login(USERNAME, PASSWORD)
@@ -30,3 +33,7 @@ class TestSendMessage(TestCase):
 
     def tearDown(self):
         self.driver.quit()
+
+
+if __name__ == "__main__":
+    unittest.main()

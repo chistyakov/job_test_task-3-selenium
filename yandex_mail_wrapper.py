@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 class YandexMailWrapper():
     def __init__(self, selenium_webdriver):
         self.driver = selenium_webdriver
@@ -33,12 +35,25 @@ class BasePage():
 
 
 class LoginPage(BasePage):
+    LOGIN_URL = "https://mail.yandex.ru"
     def login(self, username, password):
-        pass
+        self.driver.get(self.LOGIN_URL)
+        username_textbox = self.driver.find_element_by_name("login")
+        username_textbox.send_keys(username)
+        password_textbox = self.driver.find_element_by_name("passwd")
+        password_textbox.send_keys(password)
+        login_button = self.driver.find_element_by_xpath("//button[@type='submit']")
+        login_button.click()
 
 
 class MainPage(BasePage):
+    MAINPAGE_URL = "https://mail.yandex.ru"
+    def open_main_page(self):
+        self.driver.get(self.MAINPAGE_URL)
+
     def get_new_message_page(self):
+        new_mail = self.driver.find_element_by_xpath("//a[@title='Написать (w, c)']")
+        new_mail.click()
         return NewMessagePage(self.driver)
 
     def get_sent_messages_page(self):
@@ -46,32 +61,52 @@ class MainPage(BasePage):
 
 
 class NewMessagePage(BasePage):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.to_textbox = self.driver.find_element_by_class_name("b-mail-input_yabbles__focus")
+        self.subject_textbox = self.driver.find_element_by_name("subj")
+        self.body_frame = self.driver.find_element_by_id('compose-send_ifr')
+
+
     @property
     def to(self):
-        pass
+        return self.to_textbox.get_attribute('value')
 
     @to.setter
-    def to(self):
-        pass
+    def to(self, value):
+        self._unfocus()
+        self.to_textbox.send_keys(value)
 
     @property
     def subject(self):
-        pass
+        return self.subject_textbox.get_attribute('value')
 
     @subject.setter
-    def subject(self):
-        pass
+    def subject(self, value):
+        self.subject_textbox.send_keys(value)
 
     @property
     def body(self):
-        pass
+        self.driver.switch_to.frame(self.body_frame)
+        body_input = self.driver.find_element_by_id("tinymce")
+        value = body_input.get_attribute('value')
+        self.driver.switch_to.default_content()
+        return value
 
     @body.setter
-    def body(self):
-        pass
+    def body(self, value):
+        self.driver.switch_to.frame(self.body_frame)
+        body_input = self.driver.find_element_by_id("tinymce")
+        body_input.send_keys(value)
+        self.driver.switch_to.default_content()
 
     def send(self):
-        pass
+        send_button = self.driver.find_element_by_xpath("//button[@title='Отправить письмо (Ctrl + Enter)']")
+        send_button.click()
+
+    def _unfocus(self):
+        self.driver.find_element_by_class_name("b-compose").click()
+
 
 class SentMessagesPage(BasePage):
     def clear_all(self):
