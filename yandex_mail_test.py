@@ -11,6 +11,10 @@ USERNAME = "test.test100500"
 PASSWORD = "Passwo1!"
 
 
+class FailedLogin(Exception):
+    pass
+
+
 class TestSendMessage(unittest.TestCase):
     def setUp(self):
         self.driver = webdriver.Remote(
@@ -19,7 +23,10 @@ class TestSendMessage(unittest.TestCase):
         self.driver.implicitly_wait(10)
 
         self.yandex_mail = YandexMailWrapper(self.driver)
-        self.yandex_mail.login(USERNAME, PASSWORD)
+        login_result = self.yandex_mail.login(USERNAME, PASSWORD)
+        if not login_result:
+            self.driver.quit()
+            raise FailedLogin("used username: {0}, password: {1}".format(USERNAME, PASSWORD))
 
     def test_receiver_subject_body_exists(self):
         """to=1, subj=1, body=1"""
@@ -135,6 +142,12 @@ class TestSendMessage(unittest.TestCase):
 
         with self.assertRaises(MessageSendingFailed):
             self.yandex_mail.send_new_message(to=mailbox, subject="subject", body="body")
+
+    #TODO: add tests for CC and BCC
+    #TODO: add tests for boundary values of maximum number of receivers, maximum length of subject and body
+    #TODO: add tests with attachments
+    #TODO: add tests with markdown in body
+    #TODO: add tests for hotkeys
 
 
     def tearDown(self):
