@@ -163,6 +163,10 @@ class SentMessagesPage(BasePage):
         for m in messages:
             to = m.find_element_by_class_name("b-messages__from__text").text
             subj = m.find_element_by_class_name("b-messages__subject").text
-            body_first_line = m.find_element_by_class_name("b-messages__firstline").text
+            try:
+                body_first_line = m.find_element_by_class_name("b-messages__firstline").text
+            except NoSuchElementException:
+                yield ({"to": to, "subject": subj})
             yield ({"to": to, "subject": subj, "body_first_line": body_first_line})
+
 
