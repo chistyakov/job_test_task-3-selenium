@@ -30,7 +30,7 @@ class YandexMailWrapper():
     def sent_messages(self):
         main_page = MainPage(self.driver)
         sent_messages_page = main_page.get_sent_messages_page()
-        return (message for message in sent_messages_page.sent_messages)
+        return sent_messages_page.sent_messages
 
 
 class BasePage():
@@ -92,7 +92,6 @@ class NewMessagePage(BasePage):
         self.to_textbox = self.driver.find_element_by_class_name("b-mail-input_yabbles__focus")
         self.subject_textbox = self.driver.find_element_by_name("subj")
         self.body_frame = self.driver.find_element_by_id('compose-send_ifr')
-
 
     @property
     def to(self):
