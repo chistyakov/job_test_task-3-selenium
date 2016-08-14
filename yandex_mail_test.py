@@ -26,10 +26,10 @@ class TestSendMessage(unittest.TestCase):
 
         self.yandex_mail.send_new_message(to="test.test100500@yandex.ru", subject="test", body="how you doin?")
 
-        last_sent_message = self.yandex_mail.sent_messages.next()
-        self.assertEqual(last_sent_message.to, "test.test100500@yandex.ru")
-        self.assertEqual(last_sent_message.subject, "test")
-        self.assertEqual(last_sent_message.body, "how you doin?")
+        last_sent_message = next(self.yandex_mail.sent_messages)
+        self.assertEqual(last_sent_message["to"], "test.test100500@yandex.ru")
+        self.assertEqual(last_sent_message["subject"], "test")
+        self.assertEqual(last_sent_message["body_first_line"], "how you doin?")
 
     def tearDown(self):
         self.driver.quit()

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
+
+
 class YandexMailWrapper():
     def __init__(self, selenium_webdriver):
         self.driver = selenium_webdriver
@@ -30,14 +34,14 @@ class YandexMailWrapper():
 
 
 class BasePage():
+    MAINPAGE_URL = "https://mail.yandex.ru"
     def __init__(self, selenium_webdriver):
         self.driver = selenium_webdriver
 
 
 class LoginPage(BasePage):
-    LOGIN_URL = "https://mail.yandex.ru"
     def login(self, username, password):
-        self.driver.get(self.LOGIN_URL)
+        self.driver.get(self.MAINPAGE_URL)
         username_textbox = self.driver.find_element_by_name("login")
         username_textbox.send_keys(username)
         password_textbox = self.driver.find_element_by_name("passwd")
@@ -47,7 +51,10 @@ class LoginPage(BasePage):
 
 
 class MainPage(BasePage):
-    MAINPAGE_URL = "https://mail.yandex.ru"
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.open_main_page()
+
     def open_main_page(self):
         self.driver.get(self.MAINPAGE_URL)
 
@@ -57,7 +64,26 @@ class MainPage(BasePage):
         return NewMessagePage(self.driver)
 
     def get_sent_messages_page(self):
+        self.refresh_messages()
+        sent_messages = self.driver.find_element_by_xpath("//a[@title='Отправленные']")
+        sent_messages.click()
         return SentMessagesPage(self.driver)
+
+    def refresh_messages(self):
+        refresh_button = self.driver.find_element_by_class_name("js-toolbar-item-check-mail")
+        refresh_button.click()
+        self.wait_until_page_is_loaded()
+
+    def wait_until_page_is_loaded(self):
+        def page_is_loading(driver):
+            loading_indicator_elem = driver.find_element_by_class_name("b-stamp_default")
+            return "b-stamp_loading" in loading_indicator_elem.get_attribute("class").split()
+        WebDriverWait(self.driver, 10).until_not(page_is_loading)
+
+
+
+class MessageSendingFailed(Exception):
+    pass
 
 
 class NewMessagePage(BasePage):
@@ -103,6 +129,11 @@ class NewMessagePage(BasePage):
     def send(self):
         send_button = self.driver.find_element_by_xpath("//button[@title='Отправить письмо (Ctrl + Enter)']")
         send_button.click()
+        try:
+            WebDriverWait(self.driver, 10).until(
+                lambda driver: "Письмо успешно отправлено." in driver.page_source)
+        except TimeoutException:
+            raise MessageSendingFailed
 
     def _unfocus(self):
         self.driver.find_element_by_class_name("b-compose").click()
@@ -110,8 +141,29 @@ class NewMessagePage(BasePage):
 
 class SentMessagesPage(BasePage):
     def clear_all(self):
-        pass
+        self.select_all()
+        self.click_remove()
+
+    def select_all(self):
+        checkbox_select_all = self.driver.find_element_by_xpath("//label[text()='Отправленные']")
+        checkbox_select_all.click()
+        #link_select_all_in_folder = self.driver.find_element_by_link_text("Выбрать все письма в этой папке")
+        #link_select_all_in_folder.click()
+
+    def click_remove(self):
+        remove_button = self.driver.find_element_by_xpath("//a[@title='Удалить (Delete)']")
+        remove_button.click()
 
     @property
     def sent_messages(self):
-        pass
+        try:
+            messages_box = self.driver.find_element_by_xpath("(//div[@class='block-messages-wrap'])[2]/div[@class='b-messages']")
+        except NoSuchElementException:
+            raise StopIteration
+        messages = messages_box.find_elements_by_xpath("./*")
+        for m in messages:
+            to = m.find_element_by_class_name("b-messages__from__text").text
+            subj = m.find_element_by_class_name("b-messages__subject").text
+            body_first_line = m.find_element_by_class_name("b-messages__firstline").text
+            yield ({"to": to, "subject": subj, "body_first_line": body_first_line})
+
