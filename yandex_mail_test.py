@@ -71,7 +71,7 @@ class TestSendMessage(unittest.TestCase):
             self.yandex_mail.send_new_message(to="", subject="", body="body")
 
     def test_no_receiver_no_subject_no_body(self):
-        """to=0, subj=0, body=1"""
+        """to=0, subj=0, body=0"""
         with self.assertRaises(MessageSendingFailed):
             self.yandex_mail.send_new_message(to="", subject="", body="")
 
