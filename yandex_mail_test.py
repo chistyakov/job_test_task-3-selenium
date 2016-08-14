@@ -86,7 +86,55 @@ class TestSendMessage(unittest.TestCase):
         self.assertEqual(last_sent_message["subject"], "test")
         self.assertEqual(last_sent_message["body_first_line"], "how you doin?")
 
+    #There are a lot possible tests for invalid mails
+    #it's better to test it on unit level
+    def test_not_valid_mail_no_at(self):
+        with self.assertRaises(MessageSendingFailed):
+            self.yandex_mail.send_new_message(to="test.test100500", subject="subject", body="body")
 
+    def test_not_valid_mail_no_domen(self):
+        with self.assertRaises(MessageSendingFailed):
+            self.yandex_mail.send_new_message(to="test.test100500@", subject="subject", body="body")
+
+    def test_not_valid_mail_no_mailname(self):
+        with self.assertRaises(MessageSendingFailed):
+            self.yandex_mail.send_new_message(to="@gmail.com", subject="subject", body="body")
+
+    def test_not_valid_mail_no_high_level_domain(self):
+        with self.assertRaises(MessageSendingFailed):
+            self.yandex_mail.send_new_message(to="test.test100500@gmail", subject="subject", body="body")
+
+    def test_valid_mail_russian_mailname(self):
+        self.yandex_mail.clear_list_of_sent_messages()
+
+        self.yandex_mail.send_new_message(to="тест@почта.рф", subject="subject", body="body")
+        last_sent_message = next(self.yandex_mail.sent_messages)
+        self.assertEqual(last_sent_message["to"], ("тест@почта.рф", ))
+        self.assertEqual(last_sent_message["subject"], "subject")
+        self.assertEqual(last_sent_message["body_first_line"], "body")
+
+    def test_max_mail_length_is_254_equal_to_boundary(self):
+        mailbox = "a" * (254 - len("@gmail.com"))
+        mailbox = "".join((mailbox, "@gmail.com"))
+        assert len(mailbox) == 254
+        self.yandex_mail.clear_list_of_sent_messages()
+
+        self.yandex_mail.send_new_message(to=mailbox, subject="subject", body="body")
+
+        last_sent_message = next(self.yandex_mail.sent_messages)
+
+        self.assertEqual(last_sent_message["to"], (mailbox, ))
+        self.assertEqual(last_sent_message["subject"], "subject")
+        self.assertEqual(last_sent_message["body_first_line"], "body")
+
+    @unittest.expectedFailure
+    def test_max_mail_length_is_254_more_then_boundary(self):
+        mailbox = "a" * (255 - len("@gmail.com"))
+        mailbox = "".join((mailbox, "@gmail.com"))
+        assert len(mailbox) == 255
+
+        with self.assertRaises(MessageSendingFailed):
+            self.yandex_mail.send_new_message(to=mailbox, subject="subject", body="body")
 
 
     def tearDown(self):
