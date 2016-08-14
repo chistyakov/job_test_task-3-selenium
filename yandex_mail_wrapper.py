@@ -161,7 +161,7 @@ class SentMessagesPage(BasePage):
             raise StopIteration
         messages = messages_box.find_elements_by_xpath("./*")
         for m in messages:
-            to = m.find_element_by_class_name("b-messages__from__text").text
+            to = tuple(el.get_attribute('title') for el in m.find_elements_by_class_name("b-messages__from__text"))
             subj = m.find_element_by_class_name("b-messages__subject").text
             try:
                 body_first_line = m.find_element_by_class_name("b-messages__firstline").text

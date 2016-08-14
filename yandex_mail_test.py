@@ -28,7 +28,7 @@ class TestSendMessage(unittest.TestCase):
         self.yandex_mail.send_new_message(to="test.test100500@yandex.ru", subject="test", body="how you doin?")
 
         last_sent_message = next(self.yandex_mail.sent_messages)
-        self.assertEqual(last_sent_message["to"], "test.test100500@yandex.ru")
+        self.assertEqual(last_sent_message["to"], ("test.test100500@yandex.ru", ))
         self.assertEqual(last_sent_message["subject"], "test")
         self.assertEqual(last_sent_message["body_first_line"], "how you doin?")
 
@@ -39,7 +39,7 @@ class TestSendMessage(unittest.TestCase):
         self.yandex_mail.send_new_message(to="test.test100500@yandex.ru", subject="subj", body="")
 
         last_sent_message = next(self.yandex_mail.sent_messages)
-        self.assertEqual(last_sent_message["to"], "test.test100500@yandex.ru")
+        self.assertEqual(last_sent_message["to"], ("test.test100500@yandex.ru", ))
         self.assertEqual(last_sent_message["subject"], "subj")
         assert("body_first_line" not in last_sent_message)
 
@@ -74,6 +74,19 @@ class TestSendMessage(unittest.TestCase):
         """to=0, subj=0, body=0"""
         with self.assertRaises(MessageSendingFailed):
             self.yandex_mail.send_new_message(to="", subject="", body="")
+
+
+    def test_two_receivers(self):
+        self.yandex_mail.clear_list_of_sent_messages()
+
+        self.yandex_mail.send_new_message(to="test.test100500@yandex.ru, al.ol.chistyakov@gmail.com", subject="test", body="how you doin?")
+
+        last_sent_message = next(self.yandex_mail.sent_messages)
+        self.assertEqual(last_sent_message["to"], ("test.test100500@yandex.ru", "al.ol.chistyakov@gmail.com"))
+        self.assertEqual(last_sent_message["subject"], "test")
+        self.assertEqual(last_sent_message["body_first_line"], "how you doin?")
+
+
 
 
     def tearDown(self):
