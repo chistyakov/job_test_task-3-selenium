@@ -1,0 +1,8 @@
+version: '2'
+services:
+    tests:
+        build: .
+        depends_on:
+            - selenium-hub
+    selenium-hub:
+        image: selenium/standalone-firefox

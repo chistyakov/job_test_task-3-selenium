@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 import unittest
+import socket
+from time import time as now, sleep
+
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
@@ -9,6 +12,8 @@ from yandex_mail_wrapper import YandexMailWrapper, MessageSendingFailed
 
 USERNAME = "test.test100500"
 PASSWORD = "Passwo1!"
+SELENIUM_HUB_SERVER = "selenium-hub"
+SELENIUM_HUB_PORT = 4444
 
 
 class FailedLogin(Exception):
@@ -18,7 +23,8 @@ class FailedLogin(Exception):
 class TestSendMessage(unittest.TestCase):
     def setUp(self):
         self.driver = webdriver.Remote(
-            command_executor='http://192.168.99.100:32769/wd/hub',
+            command_executor='http://{0}:{1}/wd/hub'.format(
+                SELENIUM_HUB_SERVER, SELENIUM_HUB_PORT),
             desired_capabilities=DesiredCapabilities.FIREFOX)
         self.driver.implicitly_wait(10)
 
@@ -154,5 +160,26 @@ class TestSendMessage(unittest.TestCase):
         self.driver.quit()
 
 
+def wait_service(server, port, timeout_sec=10, pooling_interval_sec=1):
+    end = now() + timeout_sec
+
+    s = socket.socket()
+    while now() <= end:
+        try:
+            s.connect((server, port))
+            s.close()
+            return True
+        except (ConnectionRefusedError, OSError):
+            pass
+        sleep(pooling_interval_sec)
+    s.close()
+    return False
+
+
 if __name__ == "__main__":
-    unittest.main()
+    #see https://docs.docker.com/compose/startup-order/
+    if wait_service(SELENIUM_HUB_SERVER, SELENIUM_HUB_PORT, 20):
+        print("the servise is up")
+        unittest.main()
+    else:
+        print("the servise is unreachable")
