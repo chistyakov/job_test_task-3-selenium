@@ -179,7 +179,6 @@ def wait_service(server, port, timeout_sec=10, pooling_interval_sec=1):
 if __name__ == "__main__":
     #see https://docs.docker.com/compose/startup-order/
     if wait_service(SELENIUM_HUB_SERVER, SELENIUM_HUB_PORT, 20):
-        print("the servise is up")
         unittest.main()
     else:
         print("the servise is unreachable")

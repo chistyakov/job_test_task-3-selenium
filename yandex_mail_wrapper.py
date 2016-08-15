@@ -81,7 +81,7 @@ class MainPage(BasePage):
         def page_is_loading(driver):
             loading_indicator_elem = driver.find_element_by_class_name("b-stamp_default")
             return "b-stamp_loading" in loading_indicator_elem.get_attribute("class").split()
-        WebDriverWait(self.driver, 10).until_not(page_is_loading)
+        WebDriverWait(self.driver, 30).until_not(page_is_loading)
 
 
 
