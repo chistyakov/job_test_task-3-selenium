@@ -6,3 +6,5 @@ services:
             - selenium-hub
     selenium-hub:
         image: selenium/standalone-firefox
+        # https://github.com/SeleniumHQ/docker-selenium/issues/91
+        command: bash -c "rm /tmp/.X99-lock || echo 'Lock not found, continuing normal startup' && export no_proxy=*.local && /opt/bin/entry_point.sh"
