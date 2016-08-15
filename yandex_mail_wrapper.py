@@ -11,6 +11,8 @@ class YandexMailWrapper():
     def login(self, username, password):
         login_page = LoginPage(self.driver)
         login_page.login(username, password)
+        main_page = MainPage(self.driver)
+        main_page.wait_until_page_is_loaded()
         return "Входящие" in self.driver.title
 
     def send_new_message(self, to, subject, body):
